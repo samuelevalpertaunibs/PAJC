@@ -96,7 +96,8 @@ public class Main {
 }
 ```
 
-## Si sviluppi un programma in linguaggio Java che implementa un server che permette a più client (telnet) di connettersi, e mandare messaggi al server.
+## Server
+Si sviluppi un programma in linguaggio Java che implementa un server che permette a più client (telnet) di connettersi, e mandare messaggi al server.
 Le funzionalità da implementare sono:
 1. creazione del un server che accetta connessioni da più client sulla porta 1234, ad
 ogni client viene dato un identificativo univoco numerico (2 punti)
@@ -110,112 +111,146 @@ lo stesso testo a tutti i client collegati (3 punti)
 
 ```Java
 import java.net.*;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
-public class Main
-{
+public class Main {
 
-  private static final int port = 1234;
-  private static Map < Integer, PrintWriter > clients = new HashMap <> ();
-  private static int globalClientId;
+    private static final int port = 1234;
+    private static Map<Integer, PrintWriter> clients = new HashMap<>();
+    private static int globalClientId;
 
-  public static void main ()
-  {
-    System.out.println ("Avvio del server...");
+    public static void main() {
+        System.out.println("Avvio del server...");
 
-    try (ServerSocket server = new ServerSocket (port);)
-    {
-      System.out.println ("Server avviato...");
-      while (true)
-	{
-	  System.out.println ("In attesa di connessioni...");
+        try (ServerSocket server = new ServerSocket(port);) {
+            System.out.println("Server avviato...");
+            while (true) {
+                System.out.println("In attesa di connessioni...");
 
-	  Socket client = server.accept ();
-	  int clientId = globalClientId++;
-	    System.out.println ("Client " + clientId + " connesso");
+                Socket clientSocket = server.accept();
+                int clientId = globalClientId++;
+                System.out.println("Client " + clientId + " connesso");
 
-	  PrintWriter writer =
-	    new PrintWriter (client.getOutputStream (), true);
-	    clients.put (clientId, writer);
-	  Thread clientThread =
-	    new Thread (()->handleClient (clientId, clientSocket));
-	    clientThread.start ();
-	}
-    } catch (Exception e)
-    {
-      e.printStackTrace ();
+                PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+                clients.put(clientId, writer);
+
+                Thread clientThread = new Thread(() -> handleClient(clientId, clientSocket));
+                clientThread.start();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-  }
-
-  private static void handleClient (int clientId, Socket clientSocket)
-  {
-    try (BufferedReader reader =
-	 new BufferedReader (new
-			     InputStream (clientSocket.getInputStream ()));)
-    {
-      String inputLine;
-      while (inputLine = reader.readLine () != null)
-	{
-	  handleInput (clientId, inputLine);
-	}
+    private static void handleClient(int clientId, Socket clientSocket) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));) {
+            String inputLine;
+            while ((inputLine = reader.readLine()) != null) {
+                handleInput(clientId, inputLine);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            clients.remove(clientId);
+            System.out.println("Client " + clientId + " disconnesso.");
+        }
     }
-    catch (Exception e)
-    {
-      e.printStackTrace ();
+
+    private static void handleInput(int clientId, String inputLine) {
+        if (inputLine.startsWith("@")) {
+            sendToClient(clientId, inputLine.substring(1).toUpperCase());
+        } else if (inputLine.equals("!LIST")) {
+            sendClientList(clientId);
+        } else if (inputLine.startsWith("#")) {
+            sendToAll(clientId, inputLine.substring(1));
+        }
     }
-    finally
-    {
-      client.remove (clientId);
-      System.out.println ("Client " + clientId + " disconnesso.");
+
+    private static void sendToClient(int clientId, String message) {
+        PrintWriter writer = clients.get(clientId);
+        if (writer != null)
+            writer.println("Server: " + message);
     }
-  }
 
-  private static void handleInput (int clientId, String inputLine)
-  {
-    if (inputLine.startsWith ("@"))
-      {
-	sendToClient (clientId, inputLine.subString (1).toUpperCase ());
-      }
-    else if (inputLine.equals ("!LIST"))
-      {
-	sendClientList (clientId);
-      }
-    else if (inputLine.startsWith ("#"))
-      {
-	sendToAll (clientId, inputLine.subString (1));
-      }
-  }
+    private static void sendClientList(int clientId) {
+        PrintWriter writer = clients.get(clientId);
+        if (writer != null)
+            writer.println("Server: Ecco la lista dei client connessi " + clients.keySet());
+    }
 
-  private static void sendToClient (int clientId, String message)
-  {
-    PrintWriter writer = clients.get (clientId);
-    if (writer != null)
-      writer.pritln ("Server: " + message);
-  }
+    private static void sendToAll(int sender, String message) {
+        for (Map.Entry<Integer, PrintWriter> entry : clients.entrySet()) {
+            int clientId = entry.getKey();
+            PrintWriter writer = entry.getValue();
 
-  private static void sendClientList (int clientId)
-  {
-    PrintWriter writer = clients.get (clientId);
-    if (writer != null)
-      writer.println ("Server: Ecco la lista dei client connessi " +
-		      clients.keySet ());
-  }
-
-  private static void sendToAll (int sender, String message)
-  {
-  for (Map.Entry < Integer, PrintWriter > entry:clients.entrySet ())
-      {
-	int clientId = entry.getKey ();
-	PrintWriter writer = entry.getValue ();
-
-	if (clientId != sender)
-	  writer.println ("Client " + sender + ": " + message);
-      }
-  }
+            if (clientId != sender)
+                writer.println("Client " + sender + ": " + message);
+        }
+    }
 }
 ```
 
+## Numeri Felici
+Definiamo un numero felice tramite il seguente processo: dato un qualsiasi intero
+positivo si calcola la somma dei quadrati delle sue cifre. Se tale somma è pari ad uno il
+numero è definito un numero felice, altrimenti si riapplica il processo al nuovo numero
+finche o si ottiene 1 oppure si entra in un ciclo che non include mai uno.
+Si crei una classe Java NumeriFelici che implementa le seguenti funzionalità:
+1. Un metodo pubblico isFelice(int k) che passato un intero positivo restituisce true se il
+numero passato è un numero felice e false in caso contrario (5 punti)
+2. Un metodo pubblico contaFelici(int k) che restituisce il numero di numeri felici
+compresi tra 0 ed il numero k incluso. (2 punti)
+3. Un metodo pubblico velocitaFelice(int k) che restituisce -1 se il numero passato non
+è felice oppure il numero di iterazioni necessarie a determinare che il numero è
+felice, nel caso del numero 7 il numero restituito sarebbe 5. (3 punti)
 
+```Java
+import java.util.HashSet;
 
+public class NumeriFelici
+{
+	public static boolean isFelice (int n) {
+		return velocitaFelice(n) >= 0;
+	}
 
+	public static int velocitaFelice(int n) {
+		HashSet<Integer> results = new HashSet<>();
+		int iterations = 0;
+		while (n != 1 && !results.contains(n)) {
+			results.add(n);
+			iterations++;
+			n = calcolaSomma(n);
+		}
+		return (n == 1) ? iterations : -1;
+	}
 
+	private static int calcolaSomma (int n) {
+		int result = 0;
+		while (n > 0) {
+			result += Math.pow(n % 10, 2);
+			n = n / 10;
+		}
+		return result;
+	}
+
+	public static int contaFelici (int n) {
+		int count = 0;
+		for (int i = 1; i <= n; i++) {
+			if (isFelice(i))
+				count++;
+		}
+		return count;
+	}
+	
+	public static void main(String[] args) {
+        // Esempi di utilizzo
+        System.out.println(isFelice(19));        // true
+        System.out.println(contaFelici(20));      // 5 (1, 7, 10, 13, 19)
+        System.out.println(velocitaFelice(7));    // 5
+        System.out.println(velocitaFelice(15));   // -1
+    }
+	
+}
+```
