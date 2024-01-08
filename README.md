@@ -111,32 +111,107 @@ lo stesso testo a tutti i client collegati (3 punti)
 ```Java
 import java.net.*;
 
-public class Server() {
+public class Main
+{
 
-private static final port = 1234;
-private static Map<Integer, PrintWriter> clients = new HashMap<>();
-private static globalClientId;
+  private static final int port = 1234;
+  private static Map < Integer, PrintWriter > clients = new HashMap <> ();
+  private static int globalClientId;
 
-  public static void main() {
-    System.out.println("Avvio del server...");
+  public static void main ()
+  {
+    System.out.println ("Avvio del server...");
 
-    try(
-      ServerSocket server = new ServerSocket(port);
-    ){
-      System.out.println("Server avviato...");
-        while(true) {
-          System.out.println("In attesa di connessioni...");
+    try (ServerSocket server = new ServerSocket (port);)
+    {
+      System.out.println ("Server avviato...");
+      while (true)
+	{
+	  System.out.println ("In attesa di connessioni...");
 
-          Socket client = server.accept();
-          int clientId = globalClientId++;
-          System.out.println("Client " + clientId + " connesso");
+	  Socket client = server.accept ();
+	  int clientId = globalClientId++;
+	    System.out.println ("Client " + clientId + " connesso");
 
-          PrintWriter writer = new PrintWriter(client.getOutputStream(), true);
-          clients.put(clientId, writer);
-          Thread clientThread = new Thread(() -> handleClient(clientId, clientSocket));
-          clientThread.start();
+	  PrintWriter writer =
+	    new PrintWriter (client.getOutputStream (), true);
+	    clients.put (clientId, writer);
+	  Thread clientThread =
+	    new Thread (()->handleClient (clientId, clientSocket));
+	    clientThread.start ();
+	}
+    } catch (Exception e)
+    {
+      e.printStackTrace ();
     }
-  
+
+  }
+
+  private static void handleClient (int clientId, Socket clientSocket)
+  {
+    try (BufferedReader reader =
+	 new BufferedReader (new
+			     InputStream (clientSocket.getInputStream ()));)
+    {
+      String inputLine;
+      while (inputLine = reader.readLine () != null)
+	{
+	  handleInput (clientId, inputLine);
+	}
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace ();
+    }
+    finally
+    {
+      client.remove (clientId);
+      System.out.println ("Client " + clientId + " disconnesso.");
+    }
+  }
+
+  private static void handleInput (int clientId, String inputLine)
+  {
+    if (inputLine.startsWith ("@"))
+      {
+	sendToClient (clientId, inputLine.subString (1).toUpperCase ());
+      }
+    else if (inputLine.equals ("!LIST"))
+      {
+	sendClientList (clientId);
+      }
+    else if (inputLine.startsWith ("#"))
+      {
+	sendToAll (clientId, inputLine.subString (1));
+      }
+  }
+
+  private static void sendToClient (int clientId, String message)
+  {
+    PrintWriter writer = clients.get (clientId);
+    if (writer != null)
+      writer.pritln ("Server: " + message);
+  }
+
+  private static void sendClientList (int clientId)
+  {
+    PrintWriter writer = clients.get (clientId);
+    if (writer != null)
+      writer.println ("Server: Ecco la lista dei client connessi " +
+		      clients.keySet ());
+  }
+
+  private static void sendToAll (int sender, String message)
+  {
+  for (Map.Entry < Integer, PrintWriter > entry:clients.entrySet ())
+      {
+	int clientId = entry.getKey ();
+	PrintWriter writer = entry.getValue ();
+
+	if (clientId != sender)
+	  writer.println ("Client " + sender + ": " + message);
+      }
+  }
 }
 ```
 
