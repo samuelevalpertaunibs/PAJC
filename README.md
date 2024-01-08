@@ -95,3 +95,52 @@ public class Main {
     }
 }
 ```
+
+## Si sviluppi un programma in linguaggio Java che implementa un server che permette a più client (telnet) di connettersi, e mandare messaggi al server.
+Le funzionalità da implementare sono:
+1. creazione del un server che accetta connessioni da più client sulla porta 1234, ad
+ogni client viene dato un identificativo univoco numerico (2 punti)
+2. inviando tramite telnet al server un testo preceduto dal simbolo @ il server rimanda
+al client lo stesso testo in lettere maiuscole (2 punti)
+3. Inviando tramite telnet al server il comando “!LIST” il server restituisce al client
+l’elenco di tutti i client collegati (elenco degli identificativi) (3 punti)
+4. Inviando tramite telnet al server un testo preceduto dal simbolo # il server rimanda
+lo stesso testo a tutti i client collegati (3 punti)
+
+
+```Java
+import java.net.*;
+
+public class Server() {
+
+private static final port = 1234;
+private static Map<Integer, PrintWriter> clients = new HashMap<>();
+private static globalClientId;
+
+  public static void main() {
+    System.out.println("Avvio del server...");
+
+    try(
+      ServerSocket server = new ServerSocket(port);
+    ){
+      System.out.println("Server avviato...");
+        while(true) {
+          System.out.println("In attesa di connessioni...");
+
+          Socket client = server.accept();
+          int clientId = globalClientId++;
+          System.out.println("Client " + clientId + " connesso");
+
+          PrintWriter writer = new PrintWriter(client.getOutputStream(), true);
+          clients.put(clientId, writer);
+          Thread clientThread = new Thread(() -> handleClient(clientId, clientSocket));
+          clientThread.start();
+    }
+  
+}
+```
+
+
+
+
+
