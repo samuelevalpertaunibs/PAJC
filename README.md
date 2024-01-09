@@ -1,3 +1,6 @@
+## Java è un linguaggio...
+Semi interpretato e compilato JIT.
+
 ## Definire il concetto di lambda function e illustrarne l’utilizzo tramite un esempio in Java (3 punti)
 Una lamba function è una struttura utilizzata per compattare alcuni pezzi di codice in modo da renderlo più semplice da comprendere.
 Nello specifico possiamo utilizzare le lamba function quando abbiamo a che fare con classi o interfacce composte da un solo metodo astratto.
