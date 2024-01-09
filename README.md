@@ -35,18 +35,18 @@ Un progetto particolarmente complesso può implementare piu MVC.
 ## Illustrare l’utilizzo duale di puntatori ed array in C (3 punti)
 ```c
 int main() {
-  //Dichiaro un numero intero
-  int num = 10;
+  //Dichiaro un array di interi
+  int array[5] = {1, 2, 3, 4, 5};
 
-  // Dichiaro un puntatore e lo "allaccio" alla variabile num
-  int *p_num = &num;
+  // Dichiaro un puntatore e lo "allaccio" al terzo valore dell'array
+  int *p_num = &array[3];
 
-  printf("%d\n", num); // 10
+  printf("%d\n", array[3]); // 4
 
   // Modifico il valore di num attraverso il puntatore ad esso
   *p_num = 12;
 
-  printf("%d\n", num); // 12
+  printf("%d\n", array[3]); // 12
 
 }
 ```
